@@ -1,0 +1,719 @@
+<title>Canister Gauge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=IBM+Plex+Mono:wght@400;600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #E9ECE1;
+    --grain: #00120a;
+    --surface: #F8FAF3;
+    --surface-2: #DEE3D2;
+    --ink: #1E2722;
+    --ink-soft: #55625A;
+    --border: #C9D0BE;
+    --accent: #146E8C;
+    --accent-strong: #0E5670;
+    --accent-ink: #F5FBFD;
+    --accent-soft: #D8ECF1;
+    --status-good: #2E7D4F;
+    --status-good-soft: #DCEEE1;
+    --status-warn: #B06A16;
+    --status-warn-soft: #F3E4CB;
+    --status-critical: #A3382C;
+    --status-critical-soft: #F3DBD6;
+    --shadow: 0 1px 2px rgba(20, 30, 22, 0.06), 0 8px 24px -12px rgba(20, 30, 22, 0.18);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10160F;
+      --grain: #eaffef;
+      --surface: #19211C;
+      --surface-2: #212B24;
+      --ink: #E8ECE3;
+      --ink-soft: #9FAB9F;
+      --border: #33403A;
+      --accent: #4FB6D6;
+      --accent-strong: #7ED0E8;
+      --accent-ink: #082530;
+      --accent-soft: #1D3A42;
+      --status-good: #63C48A;
+      --status-good-soft: #1C3527;
+      --status-warn: #E5A857;
+      --status-warn-soft: #3A2C15;
+      --status-critical: #E27A6C;
+      --status-critical-soft: #3C231F;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #10160F;
+    --grain: #eaffef;
+    --surface: #19211C;
+    --surface-2: #212B24;
+    --ink: #E8ECE3;
+    --ink-soft: #9FAB9F;
+    --border: #33403A;
+    --accent: #4FB6D6;
+    --accent-strong: #7ED0E8;
+    --accent-ink: #082530;
+    --accent-soft: #1D3A42;
+    --status-good: #63C48A;
+    --status-good-soft: #1C3527;
+    --status-warn: #E5A857;
+    --status-warn-soft: #3A2C15;
+    --status-critical: #E27A6C;
+    --status-critical-soft: #3C231F;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 15% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent),
+      var(--bg);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  svg.contour-field {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) svg.contour-field { opacity: 0.35; }
+  }
+  :root[data-theme="dark"] svg.contour-field { opacity: 0.35; }
+
+  .page {
+    max-width: 62rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  header.masthead {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 2.25rem;
+    flex-wrap: wrap;
+  }
+
+  .mark-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .mark-row svg { flex: none; }
+
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-optical-sizing: auto;
+    font-size: clamp(1.9rem, 1.5rem + 1.6vw, 2.6rem);
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-strong);
+    margin: 0 0 0.35rem;
+  }
+
+  .tagline {
+    max-width: 30rem;
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+    margin: 0;
+  }
+
+  main.panel {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  @media (max-width: 780px) {
+    main.panel { grid-template-columns: 1fr; }
+    .result-col { border-top: 1px solid var(--border); }
+  }
+
+  .form-col {
+    padding: 2rem clamp(1.25rem, 2vw, 2.25rem);
+    border-right: 1px solid var(--border);
+  }
+  @media (max-width: 780px) { .form-col { border-right: none; } }
+
+  .field-group { margin-bottom: 1.6rem; }
+
+  .field-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+  }
+
+  .field-hint {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin: 0.35rem 0 0;
+  }
+
+  .weight-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--ink);
+    padding: 0.65rem 2.6rem 0.65rem 0.85rem;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { opacity: 0.6; }
+  input[type="number"]:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+  input[type="number"]::placeholder { color: var(--ink-soft); opacity: 0.7; }
+
+  .unit-suffix {
+    position: absolute;
+    right: 0.85rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    pointer-events: none;
+  }
+
+  .chip-row {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.55rem;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .chip:hover { transform: translateY(-1px); }
+  .chip:active { transform: translateY(0); }
+  .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .segmented {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 3px;
+    margin-bottom: 0.9rem;
+  }
+  .segmented input { position: absolute; opacity: 0; pointer-events: none; }
+  .segmented label {
+    text-align: center;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.5rem 0.4rem;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .segmented input:checked + label {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .segmented input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  details.advanced {
+    margin-top: 0.5rem;
+    border-top: 1px dashed var(--border);
+    padding-top: 1.1rem;
+  }
+  details.advanced summary {
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent-strong);
+    list-style: none;
+  }
+  details.advanced summary::-webkit-details-marker { display: none; }
+  details.advanced summary::before {
+    content: "+ ";
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  details.advanced[open] summary::before { content: "\2212 "; }
+  details.advanced .body { padding-top: 0.9rem; }
+
+  .preset-row { display: flex; gap: 0.4rem; margin-top: 0.55rem; flex-wrap: wrap; }
+
+  .result-col {
+    padding: 2rem clamp(1.25rem, 2vw, 2.25rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: var(--surface-2);
+  }
+
+  .gauge-wrap { position: relative; width: 200px; height: 200px; }
+  .gauge-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .gauge-track { fill: none; stroke: var(--border); stroke-width: 14; }
+  .gauge-fill {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 14;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.4s ease, stroke 0.3s ease;
+  }
+  .gauge-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .gauge-pct {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 2.3rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .gauge-sub {
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.3rem;
+  }
+
+  .status-pill {
+    margin-top: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    background: var(--status-good-soft);
+    color: var(--status-good);
+  }
+  .status-pill .dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: currentColor; }
+  .status-pill.warn { background: var(--status-warn-soft); color: var(--status-warn); }
+  .status-pill.critical { background: var(--status-critical-soft); color: var(--status-critical); }
+  .status-pill.neutral { background: var(--surface); color: var(--ink-soft); border: 1px solid var(--border); }
+
+  .grams-line {
+    margin-top: 0.9rem;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+  .grams-line strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .warning-note {
+    margin-top: 1rem;
+    font-size: 0.82rem;
+    color: var(--status-critical);
+    background: var(--status-critical-soft);
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    max-width: 22rem;
+  }
+
+  .burn-result {
+    margin-top: 1.4rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--border);
+    width: 100%;
+    max-width: 20rem;
+  }
+  .burn-result .figure {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 1.5rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .burn-result .caption { font-size: 0.78rem; color: var(--ink-soft); margin-top: 0.2rem; }
+
+  footer.reference {
+    margin-top: 2.25rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+  }
+  footer.reference summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--ink);
+    list-style: none;
+  }
+  footer.reference summary::-webkit-details-marker { display: none; }
+  footer.reference summary::before { content: "\2192  "; color: var(--accent-strong); }
+  footer.reference[open] summary::before { content: "\2193  "; }
+
+  table.ref-table {
+    margin-top: 1rem;
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.85rem;
+  }
+  table.ref-table th, table.ref-table td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  table.ref-table th {
+    color: var(--ink-soft);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+  }
+  table.ref-table td { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .ref-note { font-size: 0.82rem; color: var(--ink-soft); margin-top: 0.9rem; max-width: 42rem; }
+
+  .overflow-guard { overflow-x: auto; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gauge-fill { transition: none; }
+    .chip { transition: none; }
+  }
+</style>
+
+<svg class="contour-field" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="contours" width="220" height="220" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="var(--grain)" stroke-width="1">
+        <circle cx="40" cy="180" r="20" />
+        <circle cx="40" cy="180" r="40" />
+        <circle cx="40" cy="180" r="62" />
+        <circle cx="190" cy="20" r="16" />
+        <circle cx="190" cy="20" r="34" />
+        <circle cx="190" cy="20" r="54" />
+        <circle cx="190" cy="20" r="76" />
+      </g>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#contours)" />
+</svg>
+
+<div class="page">
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">Field instrument · weigh &amp; read</p>
+      <div class="mark-row">
+        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+          <rect x="7.5" y="15" width="15" height="11.5" rx="2" stroke="var(--ink)" stroke-width="1.4"/>
+          <line x1="10.5" y1="15" x2="10.5" y2="12.5" stroke="var(--ink)" stroke-width="1.4"/>
+          <line x1="19.5" y1="15" x2="19.5" y2="12.5" stroke="var(--ink)" stroke-width="1.4"/>
+          <circle cx="15" cy="6" r="3.4" fill="var(--accent)"/>
+          <circle cx="15" cy="6" r="1.3" fill="var(--accent-soft)"/>
+        </svg>
+        <h1>Canister Gauge</h1>
+      </div>
+      <p class="tagline">Weigh your gas cartridge on a kitchen scale and enter the numbers to see how much fuel is actually left inside.</p>
+    </div>
+  </header>
+
+  <main class="panel">
+    <section class="form-col">
+      <div class="field-group">
+        <label class="field-label" for="netWeight">Net gas weight, when full</label>
+        <div class="weight-input">
+          <input type="number" id="netWeight" inputmode="decimal" min="0" step="1" placeholder="e.g. 230" />
+          <span class="unit-suffix">g</span>
+        </div>
+        <p class="field-hint">Printed on the canister label — the fuel only, not the metal.</p>
+        <div class="chip-row" id="netPresets">
+          <button type="button" class="chip" data-value="100">100 g</button>
+          <button type="button" class="chip" data-value="227">227 g</button>
+          <button type="button" class="chip" data-value="230">230 g</button>
+          <button type="button" class="chip" data-value="450">450 g</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" id="secondLabel">Empty weight (tare)</label>
+        <div class="segmented" role="radiogroup" aria-labelledby="secondLabel">
+          <input type="radio" name="mode" id="modeTare" value="tare" checked>
+          <label for="modeTare">I know the empty weight</label>
+          <input type="radio" name="mode" id="modeFull" value="full">
+          <label for="modeFull">I know the sealed weight</label>
+        </div>
+        <div class="weight-input">
+          <input type="number" id="secondWeight" inputmode="decimal" min="0" step="1" placeholder="e.g. 155" />
+          <span class="unit-suffix">g</span>
+        </div>
+        <p class="field-hint" id="secondHint">Often stamped near the base or valve of the canister. If you can't find it, weigh a spent one instead.</p>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="currentWeight">Current weight, right now</label>
+        <div class="weight-input">
+          <input type="number" id="currentWeight" inputmode="decimal" min="0" step="1" placeholder="e.g. 240" />
+          <span class="unit-suffix">g</span>
+        </div>
+        <p class="field-hint">Put the canister on the scale as it is today.</p>
+      </div>
+
+      <details class="advanced">
+        <summary>Estimate remaining stove time</summary>
+        <div class="body">
+          <label class="field-label" for="burnRate">Average burn rate</label>
+          <div class="weight-input">
+            <input type="number" id="burnRate" inputmode="decimal" min="0" step="0.5" placeholder="e.g. 15" />
+            <span class="unit-suffix">g/hr</span>
+          </div>
+          <div class="preset-row">
+            <button type="button" class="chip" data-value="7">Simmer · 7</button>
+            <button type="button" class="chip" data-value="15">Boil · 15</button>
+            <button type="button" class="chip" data-value="28">High output · 28</button>
+          </div>
+          <p class="field-hint">Rough presets in g/hr — actual burn rate depends on your stove, wind, and altitude.</p>
+        </div>
+      </details>
+    </section>
+
+    <section class="result-col">
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-track" cx="100" cy="100" r="82"></circle>
+          <circle class="gauge-fill" id="gaugeFill" cx="100" cy="100" r="82" stroke-dasharray="515.2" stroke-dashoffset="515.2"></circle>
+        </svg>
+        <div class="gauge-center">
+          <span class="gauge-pct" id="pctDisplay">—</span>
+          <span class="gauge-sub">remaining</span>
+        </div>
+      </div>
+
+      <span class="status-pill neutral" id="statusPill"><span class="dot"></span><span id="statusText">Enter your numbers</span></span>
+
+      <p class="grams-line" id="gramsLine">Fill in the fields to calculate.</p>
+
+      <div class="warning-note" id="warningNote" hidden></div>
+
+      <div class="burn-result" id="burnResult" hidden>
+        <div class="figure" id="burnFigure">—</div>
+        <div class="caption" id="burnCaption">Estimated stove time left</div>
+      </div>
+    </section>
+  </main>
+
+  <details class="reference">
+    <summary>Standard canister sizes, for reference</summary>
+    <div class="overflow-guard">
+      <table class="ref-table">
+        <thead>
+          <tr><th>Net gas weight</th><th>Typical total (sealed)</th><th>Common on</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>100 g</td><td>≈ 195–210 g</td><td>Compact / backpacking canisters</td></tr>
+          <tr><td>227 / 230 g</td><td>≈ 375–400 g</td><td>Most mid-size screw-top canisters</td></tr>
+          <tr><td>450 g</td><td>≈ 680–720 g</td><td>Basecamp / group canisters</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="ref-note">These are ballpark figures — the metal canister itself varies by brand and construction, so the empty (tare) weight isn't standardized even when the gas fill is. Whenever you can, use the number printed on your specific canister, or weigh one you've fully emptied.</p>
+  </details>
+</div>
+
+<script>
+  (function () {
+    var netWeightEl = document.getElementById('netWeight');
+    var secondWeightEl = document.getElementById('secondWeight');
+    var currentWeightEl = document.getElementById('currentWeight');
+    var secondLabelEl = document.getElementById('secondLabel');
+    var secondHintEl = document.getElementById('secondHint');
+    var burnRateEl = document.getElementById('burnRate');
+
+    var gaugeFill = document.getElementById('gaugeFill');
+    var pctDisplay = document.getElementById('pctDisplay');
+    var statusPill = document.getElementById('statusPill');
+    var statusText = document.getElementById('statusText');
+    var gramsLine = document.getElementById('gramsLine');
+    var warningNote = document.getElementById('warningNote');
+    var burnResult = document.getElementById('burnResult');
+    var burnFigure = document.getElementById('burnFigure');
+
+    var CIRC = 2 * Math.PI * 82;
+
+    function mode() {
+      return document.querySelector('input[name="mode"]:checked').value;
+    }
+
+    function updateModeLabel() {
+      if (mode() === 'tare') {
+        secondLabelEl.textContent = 'Empty weight (tare)';
+        secondHintEl.textContent = "Often stamped near the base or valve of the canister. If you can't find it, weigh a spent one instead.";
+        secondWeightEl.placeholder = 'e.g. 155';
+      } else {
+        secondLabelEl.textContent = 'Sealed weight, brand new';
+        secondHintEl.textContent = 'The full weight before first use — box, receipt, or a fresh one on the scale.';
+        secondWeightEl.placeholder = 'e.g. 385';
+      }
+      recalc();
+    }
+
+    function num(el) {
+      var v = parseFloat(el.value);
+      return isNaN(v) ? null : v;
+    }
+
+    function setGauge(pct, color) {
+      var offset = CIRC * (1 - pct / 100);
+      gaugeFill.style.strokeDashoffset = offset;
+      gaugeFill.style.stroke = color;
+    }
+
+    function setStatus(label, cls) {
+      statusPill.className = 'status-pill' + (cls ? ' ' + cls : '');
+      statusText.textContent = label;
+    }
+
+    function recalc() {
+      var netWeight = num(netWeightEl);
+      var second = num(secondWeightEl);
+      var current = num(currentWeightEl);
+
+      warningNote.hidden = true;
+      warningNote.textContent = '';
+
+      if (netWeight === null || netWeight <= 0 || second === null || current === null) {
+        pctDisplay.textContent = '—';
+        setGauge(0, 'var(--border)');
+        setStatus('Enter your numbers', 'neutral');
+        gramsLine.textContent = 'Fill in the fields to calculate.';
+        burnResult.hidden = true;
+        return;
+      }
+
+      var tare = mode() === 'tare' ? second : second - netWeight;
+
+      if (tare < 0) {
+        setStatus('Check your numbers', 'critical');
+        pctDisplay.textContent = '—';
+        setGauge(0, 'var(--status-critical)');
+        gramsLine.textContent = 'The sealed weight should be larger than the net gas weight.';
+        burnResult.hidden = true;
+        return;
+      }
+
+      var remaining = current - tare;
+      var pct = (remaining / netWeight) * 100;
+      var clamped = Math.max(0, Math.min(100, pct));
+
+      var color, label, cls;
+      if (pct <= 0) {
+        color = 'var(--status-critical)'; label = 'Empty'; cls = 'critical';
+      } else if (pct < 15) {
+        color = 'var(--status-critical)'; label = 'Low — pack a spare'; cls = 'critical';
+      } else if (pct < 40) {
+        color = 'var(--status-warn)'; label = 'Running low'; cls = 'warn';
+      } else if (pct >= 97) {
+        color = 'var(--status-good)'; label = 'Full'; cls = 'good';
+      } else {
+        color = 'var(--status-good)'; label = 'Good to go'; cls = 'good';
+      }
+
+      setGauge(clamped, color);
+      pctDisplay.textContent = Math.round(clamped) + '%';
+      setStatus(label, cls);
+
+      var displayGrams = Math.max(0, Math.round(remaining));
+      gramsLine.innerHTML = '<strong>' + displayGrams + ' g</strong> of gas left, out of ' + Math.round(netWeight) + ' g full.';
+
+      if (pct < 0) {
+        warningNote.hidden = false;
+        warningNote.textContent = 'The current weight is below the empty weight you entered — double-check your numbers or your scale.';
+      } else if (pct > 100) {
+        warningNote.hidden = false;
+        warningNote.textContent = 'The current weight is above the full weight — double-check your numbers.';
+      }
+
+      var burnRate = num(burnRateEl);
+      if (burnRate !== null && burnRate > 0) {
+        burnResult.hidden = false;
+        var hours = Math.max(0, remaining) / burnRate;
+        if (hours >= 1) {
+          burnFigure.textContent = '~' + hours.toFixed(1) + ' hours';
+        } else {
+          burnFigure.textContent = '~' + Math.round(hours * 60) + ' minutes';
+        }
+      } else {
+        burnResult.hidden = true;
+      }
+    }
+
+    [netWeightEl, secondWeightEl, currentWeightEl, burnRateEl].forEach(function (el) {
+      el.addEventListener('input', recalc);
+    });
+    document.querySelectorAll('input[name="mode"]').forEach(function (el) {
+      el.addEventListener('change', updateModeLabel);
+    });
+    document.getElementById('netPresets').addEventListener('click', function (e) {
+      var btn = e.target.closest('.chip');
+      if (!btn) return;
+      netWeightEl.value = btn.dataset.value;
+      recalc();
+    });
+    document.querySelector('.preset-row').addEventListener('click', function (e) {
+      var btn = e.target.closest('.chip');
+      if (!btn) return;
+      burnRateEl.value = btn.dataset.value;
+      recalc();
+    });
+
+    updateModeLabel();
+  })();
+</script>
