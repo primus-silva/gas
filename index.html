@@ -5,7 +5,6 @@
 <style>
   :root {
     --bg: #090A08;
-    --grain: #eaffef;
     --surface: #1B2016;
     --surface-2: #10130E;
     --ink: #ECEFE6;
@@ -36,15 +35,6 @@
     font-family: "Work Sans", ui-sans-serif, system-ui, sans-serif;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
-  }
-
-  svg.contour-field {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    opacity: 0.4;
   }
 
   .page {
@@ -382,23 +372,6 @@
     .chip { transition: none; }
   }
 </style>
-
-<svg class="contour-field" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
-  <defs>
-    <pattern id="contours" width="220" height="220" patternUnits="userSpaceOnUse">
-      <g fill="none" stroke="var(--grain)" stroke-width="1">
-        <circle cx="40" cy="180" r="20" />
-        <circle cx="40" cy="180" r="40" />
-        <circle cx="40" cy="180" r="62" />
-        <circle cx="190" cy="20" r="16" />
-        <circle cx="190" cy="20" r="34" />
-        <circle cx="190" cy="20" r="54" />
-        <circle cx="190" cy="20" r="76" />
-      </g>
-    </pattern>
-  </defs>
-  <rect width="100%" height="100%" fill="url(#contours)" />
-</svg>
 
 <div class="page">
   <header class="masthead">
