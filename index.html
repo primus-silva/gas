@@ -153,6 +153,29 @@
   }
   input[type="number"]::placeholder { color: var(--ink-soft); opacity: 0.7; }
 
+  .preset-select {
+    width: 100%;
+    font-family: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--ink);
+    background: var(--surface-2)
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" fill="none" stroke="%239AA491" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+      no-repeat right 0.9rem center;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.65rem 2.4rem 0.65rem 0.85rem;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+  .preset-select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+  .preset-select option { background: var(--surface); color: var(--ink); }
+
   .unit-suffix {
     position: absolute;
     right: 0.85rem;
@@ -394,6 +417,14 @@
   <main class="panel">
     <section class="form-col">
       <div class="field-group">
+        <label class="field-label" for="canisterPreset">Your canister</label>
+        <select id="canisterPreset" class="preset-select">
+          <option value="">Other / enter weights manually</option>
+        </select>
+        <p class="field-hint">Pick yours and the weights below fill in automatically.</p>
+      </div>
+
+      <div class="field-group">
         <label class="field-label" for="netWeight">Net gas weight, when full</label>
         <div class="weight-input">
           <input type="number" id="netWeight" inputmode="decimal" min="0" step="1" placeholder="e.g. 230" />
@@ -476,20 +507,16 @@
   </main>
 
   <details class="reference">
-    <summary>Standard canister sizes, for reference</summary>
+    <summary>Canister reference weights</summary>
     <div class="overflow-guard">
-      <table class="ref-table">
+      <table class="ref-table" id="refTable">
         <thead>
-          <tr><th>Net gas weight</th><th>Typical total (sealed)</th><th>Common on</th></tr>
+          <tr><th>Canister</th><th>Fuel content</th><th>Full weight</th><th>Empty weight</th></tr>
         </thead>
-        <tbody>
-          <tr><td>100 g</td><td>≈ 195–210 g</td><td>Compact / backpacking canisters</td></tr>
-          <tr><td>227 / 230 g</td><td>≈ 375–400 g</td><td>Most mid-size screw-top canisters</td></tr>
-          <tr><td>450 g</td><td>≈ 680–720 g</td><td>Basecamp / group canisters</td></tr>
-        </tbody>
+        <tbody></tbody>
       </table>
     </div>
-    <p class="ref-note">These are ballpark figures — the metal canister itself varies by brand and construction, so the empty (tare) weight isn't standardized even when the gas fill is. Whenever you can, use the number printed on your specific canister, or weigh one you've fully emptied.</p>
+    <p class="ref-note">These are the exact figures for each canister — select one above to fill in the calculator automatically, or use them to check a canister by hand.</p>
   </details>
 </div>
 
@@ -501,6 +528,34 @@
     var secondLabelEl = document.getElementById('secondLabel');
     var secondHintEl = document.getElementById('secondHint');
     var burnRateEl = document.getElementById('burnRate');
+
+    var CANISTERS = [
+      { label: 'Power gas — 100 g', net: 100, full: 200, empty: 100 },
+      { label: 'Power gas — 230 g', net: 230, full: 382.13, empty: 152.13 },
+      { label: 'Power gas — 450 g', net: 450, full: 669.8, empty: 219.8 },
+      { label: 'Winter gas — 230 g', net: 230, full: 386, empty: 156 },
+      { label: 'Winter gas — 450 g', net: 450, full: 674.8, empty: 224.8 },
+      { label: 'Summer gas — 230 g', net: 230, full: 381.1, empty: 151.1 },
+      { label: 'Summer gas — 450 g', net: 450, full: 666.4, empty: 216.4 },
+      { label: 'SIP gas — 230 g', net: 230, full: 387, empty: 157 },
+      { label: 'SIP gas — 450 g', net: 450, full: 674.8, empty: 224.8 }
+    ];
+
+    var presetSelect = document.getElementById('canisterPreset');
+    CANISTERS.forEach(function (c, i) {
+      var opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = c.label;
+      presetSelect.appendChild(opt);
+    });
+
+    var refBody = document.querySelector('#refTable tbody');
+    CANISTERS.forEach(function (c) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + c.label.split(' — ')[0] + '</td><td>' + c.net + ' g</td><td>' +
+        c.full.toFixed(2).replace(/\.?0+$/, '') + ' g</td><td>' + c.empty.toFixed(2).replace(/\.?0+$/, '') + ' g</td>';
+      refBody.appendChild(tr);
+    });
 
     var gaugeFill = document.getElementById('gaugeFill');
     var pctDisplay = document.getElementById('pctDisplay');
@@ -623,6 +678,9 @@
     [netWeightEl, secondWeightEl, currentWeightEl, burnRateEl].forEach(function (el) {
       el.addEventListener('input', recalc);
     });
+    [netWeightEl, secondWeightEl].forEach(function (el) {
+      el.addEventListener('input', function () { presetSelect.value = ''; });
+    });
     document.querySelectorAll('input[name="mode"]').forEach(function (el) {
       el.addEventListener('change', updateModeLabel);
     });
@@ -637,6 +695,14 @@
       if (!btn) return;
       burnRateEl.value = btn.dataset.value;
       recalc();
+    });
+    presetSelect.addEventListener('change', function () {
+      if (presetSelect.value === '') return;
+      var c = CANISTERS[parseInt(presetSelect.value, 10)];
+      document.getElementById('modeTare').checked = true;
+      netWeightEl.value = c.net;
+      secondWeightEl.value = c.empty;
+      updateModeLabel();
     });
 
     updateModeLabel();
