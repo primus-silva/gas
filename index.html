@@ -421,10 +421,10 @@
         <select id="canisterPreset" class="preset-select">
           <option value="">Other / enter weights manually</option>
         </select>
-        <p class="field-hint">Pick yours and the weights below fill in automatically.</p>
+        <p class="field-hint" id="presetSummary"></p>
       </div>
 
-      <div class="field-group">
+      <div class="field-group" id="netWeightGroup" hidden>
         <label class="field-label" for="netWeight">Net gas weight, when full</label>
         <div class="weight-input">
           <input type="number" id="netWeight" inputmode="decimal" min="0" step="1" placeholder="e.g. 230" />
@@ -439,7 +439,7 @@
         </div>
       </div>
 
-      <div class="field-group">
+      <div class="field-group" id="secondWeightGroup" hidden>
         <label class="field-label" id="secondLabel">Empty weight (tare)</label>
         <div class="segmented" role="radiogroup" aria-labelledby="secondLabel">
           <input type="radio" name="mode" id="modeTare" value="tare" checked>
@@ -696,18 +696,42 @@
       burnRateEl.value = btn.dataset.value;
       recalc();
     });
+    var netWeightGroup = document.getElementById('netWeightGroup');
+    var secondWeightGroup = document.getElementById('secondWeightGroup');
+    var presetSummary = document.getElementById('presetSummary');
+
+    function fmt(n) {
+      return n.toFixed(2).replace(/\.?0+$/, '');
+    }
+
     function applyPreset(index) {
       var c = CANISTERS[index];
       presetSelect.value = index;
       document.getElementById('modeTare').checked = true;
       netWeightEl.value = c.net;
       secondWeightEl.value = c.empty;
+      netWeightGroup.hidden = true;
+      secondWeightGroup.hidden = true;
+      presetSummary.textContent = 'Full ' + fmt(c.full) + ' g · empty ' + fmt(c.empty) + ' g — just weigh it and enter the current weight below.';
       updateModeLabel();
     }
 
+    function useManualEntry() {
+      presetSelect.value = '';
+      netWeightGroup.hidden = false;
+      secondWeightGroup.hidden = false;
+      presetSummary.textContent = '';
+      netWeightEl.value = '';
+      secondWeightEl.value = '';
+      recalc();
+    }
+
     presetSelect.addEventListener('change', function () {
-      if (presetSelect.value === '') return;
-      applyPreset(parseInt(presetSelect.value, 10));
+      if (presetSelect.value === '') {
+        useManualEntry();
+      } else {
+        applyPreset(parseInt(presetSelect.value, 10));
+      }
     });
 
     applyPreset(0);
