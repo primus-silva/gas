@@ -696,15 +696,20 @@
       burnRateEl.value = btn.dataset.value;
       recalc();
     });
-    presetSelect.addEventListener('change', function () {
-      if (presetSelect.value === '') return;
-      var c = CANISTERS[parseInt(presetSelect.value, 10)];
+    function applyPreset(index) {
+      var c = CANISTERS[index];
+      presetSelect.value = index;
       document.getElementById('modeTare').checked = true;
       netWeightEl.value = c.net;
       secondWeightEl.value = c.empty;
       updateModeLabel();
+    }
+
+    presetSelect.addEventListener('change', function () {
+      if (presetSelect.value === '') return;
+      applyPreset(parseInt(presetSelect.value, 10));
     });
 
-    updateModeLabel();
+    applyPreset(0);
   })();
 </script>
