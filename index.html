@@ -196,6 +196,7 @@
     gap: 3px;
     margin-bottom: 0.9rem;
   }
+  .segmented.three { grid-template-columns: repeat(3, 1fr); margin-bottom: 0; }
   .segmented input { position: absolute; opacity: 0; pointer-events: none; }
   .segmented label {
     text-align: center;
@@ -349,6 +350,18 @@
   <main class="panel">
     <section class="form-col">
       <div class="field-group">
+        <span class="field-label" id="unitLabel">Weight unit</span>
+        <div class="segmented three" role="radiogroup" aria-labelledby="unitLabel">
+          <input type="radio" name="unit" id="unitG" value="g" checked>
+          <label for="unitG">Grams</label>
+          <input type="radio" name="unit" id="unitOz" value="oz">
+          <label for="unitOz">Ounces</label>
+          <input type="radio" name="unit" id="unitLb" value="lb">
+          <label for="unitLb">Pounds</label>
+        </div>
+      </div>
+
+      <div class="field-group">
         <label class="field-label" for="canisterPreset">Your canister</label>
         <select id="canisterPreset" class="preset-select">
           <option value="">Other / enter weights manually</option>
@@ -434,6 +447,13 @@
 
 <script>
   (function () {
+    var UNITS = {
+      g:  { label: 'g',  factor: 1,            show: 2, out: 0, step: '1' },
+      oz: { label: 'oz', factor: 28.349523125, show: 2, out: 2, step: '0.1' },
+      lb: { label: 'lb', factor: 453.59237,    show: 3, out: 3, step: '0.01' }
+    };
+    var unit = 'g';
+
     var netWeightEl = document.getElementById('netWeight');
     var secondWeightEl = document.getElementById('secondWeight');
     var currentWeightEl = document.getElementById('currentWeight');
@@ -452,6 +472,9 @@
       { label: 'SIP gas - 450 g', net: 450, full: 674.8, empty: 224.8 }
     ];
 
+    var grams = { net: null, second: null, current: null };
+    var activePreset = null;
+
     var presetSelect = document.getElementById('canisterPreset');
     CANISTERS.forEach(function (c, i) {
       var opt = document.createElement('option');
@@ -460,22 +483,28 @@
       presetSelect.appendChild(opt);
     });
 
-    var refBody = document.querySelector('#refTable tbody');
-    CANISTERS.forEach(function (c) {
-      var tr = document.createElement('tr');
-      tr.innerHTML = '<td>' + c.label.split(' - ')[0] + '</td><td>' + c.net + ' g</td><td>' +
-        c.full.toFixed(2).replace(/\.?0+$/, '') + ' g</td><td>' + c.empty.toFixed(2).replace(/\.?0+$/, '') + ' g</td>';
-      refBody.appendChild(tr);
-    });
-
     var gaugeFill = document.getElementById('gaugeFill');
     var pctDisplay = document.getElementById('pctDisplay');
     var statusPill = document.getElementById('statusPill');
     var statusText = document.getElementById('statusText');
     var gramsLine = document.getElementById('gramsLine');
     var warningNote = document.getElementById('warningNote');
+    var netWeightGroup = document.getElementById('netWeightGroup');
+    var secondWeightGroup = document.getElementById('secondWeightGroup');
+    var presetSummary = document.getElementById('presetSummary');
+    var refBody = document.querySelector('#refTable tbody');
 
     var CIRC = 2 * Math.PI * 82;
+
+    function trim(n, d) {
+      var s = n.toFixed(d);
+      return s.indexOf('.') === -1 ? s : s.replace(/\.?0+$/, '');
+    }
+    function toUnit(g) { return g / UNITS[unit].factor; }
+    function toGrams(v) { return v * UNITS[unit].factor; }
+    function inputVal(g) { return trim(toUnit(g), UNITS[unit].show); }
+    function showVal(g) { return inputVal(g) + ' ' + UNITS[unit].label; }
+    function outVal(g) { return toUnit(g).toFixed(UNITS[unit].out) + ' ' + UNITS[unit].label; }
 
     function mode() {
       return document.querySelector('input[name="mode"]:checked').value;
@@ -485,18 +514,13 @@
       if (mode() === 'tare') {
         secondLabelEl.textContent = 'Empty weight (tare)';
         secondHintEl.textContent = "Often stamped near the base or valve of the canister. If you can't find it, weigh a spent one instead.";
-        secondWeightEl.placeholder = 'e.g. 155';
+        secondWeightEl.placeholder = 'e.g. ' + inputVal(155);
       } else {
         secondLabelEl.textContent = 'Sealed weight, brand new';
         secondHintEl.textContent = 'The full weight before first use - box, receipt, or a fresh one on the scale.';
-        secondWeightEl.placeholder = 'e.g. 385';
+        secondWeightEl.placeholder = 'e.g. ' + inputVal(385);
       }
       recalc();
-    }
-
-    function num(el) {
-      var v = parseFloat(el.value);
-      return isNaN(v) ? null : v;
     }
 
     function setGauge(pct, color) {
@@ -511,14 +535,20 @@
     }
 
     function recalc() {
-      var netWeight = num(netWeightEl);
-      var second = num(secondWeightEl);
-      var current = num(currentWeightEl);
-
       warningNote.hidden = true;
       warningNote.textContent = '';
 
-      if (netWeight === null || netWeight <= 0 || second === null || current === null) {
+      var netG = null;
+      var tareG = null;
+      if (activePreset !== null) {
+        netG = CANISTERS[activePreset].net;
+        tareG = CANISTERS[activePreset].empty;
+      } else if (grams.net !== null && grams.second !== null) {
+        netG = grams.net;
+        tareG = mode() === 'tare' ? grams.second : grams.second - grams.net;
+      }
+
+      if (netG === null || netG <= 0 || grams.current === null) {
         pctDisplay.textContent = ' - ';
         setGauge(0, 'var(--border)');
         setStatus('Enter your numbers', 'neutral');
@@ -526,9 +556,7 @@
         return;
       }
 
-      var tare = mode() === 'tare' ? second : second - netWeight;
-
-      if (tare < 0) {
+      if (tareG < 0) {
         setStatus('Check your numbers', 'critical');
         pctDisplay.textContent = ' - ';
         setGauge(0, 'var(--status-critical)');
@@ -536,8 +564,8 @@
         return;
       }
 
-      var remaining = current - tare;
-      var pct = (remaining / netWeight) * 100;
+      var remaining = grams.current - tareG;
+      var pct = (remaining / netG) * 100;
       var clamped = Math.max(0, Math.min(100, pct));
 
       var color, label, cls;
@@ -557,8 +585,7 @@
       pctDisplay.textContent = Math.round(clamped) + '%';
       setStatus(label, cls);
 
-      var displayGrams = Math.max(0, Math.round(remaining));
-      gramsLine.innerHTML = '<strong>' + displayGrams + ' g</strong> of gas left, out of ' + Math.round(netWeight) + ' g full.';
+      gramsLine.innerHTML = '<strong>' + outVal(Math.max(0, remaining)) + '</strong> of gas left, out of ' + outVal(netG) + ' full.';
 
       if (pct < 0) {
         warningNote.hidden = false;
@@ -569,50 +596,97 @@
       }
     }
 
-    [netWeightEl, secondWeightEl, currentWeightEl].forEach(function (el) {
-      el.addEventListener('input', recalc);
-    });
-    [netWeightEl, secondWeightEl].forEach(function (el) {
-      el.addEventListener('input', function () { presetSelect.value = ''; });
-    });
-    document.querySelectorAll('input[name="mode"]').forEach(function (el) {
-      el.addEventListener('change', updateModeLabel);
-    });
-    document.getElementById('netPresets').addEventListener('click', function (e) {
-      var btn = e.target.closest('.chip');
-      if (!btn) return;
-      netWeightEl.value = btn.dataset.value;
-      recalc();
-    });
-    var netWeightGroup = document.getElementById('netWeightGroup');
-    var secondWeightGroup = document.getElementById('secondWeightGroup');
-    var presetSummary = document.getElementById('presetSummary');
+    function renderTable() {
+      refBody.innerHTML = '';
+      CANISTERS.forEach(function (c) {
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + c.label.split(' - ')[0] + '</td><td>' + showVal(c.net) + '</td><td>' +
+          showVal(c.full) + '</td><td>' + showVal(c.empty) + '</td>';
+        refBody.appendChild(tr);
+      });
+    }
 
-    function fmt(n) {
-      return n.toFixed(2).replace(/\.?0+$/, '');
+    function updateSummary() {
+      if (activePreset === null) {
+        presetSummary.textContent = '';
+        return;
+      }
+      var c = CANISTERS[activePreset];
+      presetSummary.textContent = 'Full ' + showVal(c.full) + ' - empty ' + showVal(c.empty) + ' - just weigh it and enter the current weight below.';
+    }
+
+    function applyUnit(next) {
+      unit = next;
+      document.querySelectorAll('.unit-suffix').forEach(function (s) {
+        s.textContent = UNITS[unit].label;
+      });
+      [netWeightEl, secondWeightEl, currentWeightEl].forEach(function (el) {
+        el.step = UNITS[unit].step;
+      });
+      netWeightEl.value = grams.net === null ? '' : inputVal(grams.net);
+      secondWeightEl.value = grams.second === null ? '' : inputVal(grams.second);
+      currentWeightEl.value = grams.current === null ? '' : inputVal(grams.current);
+      netWeightEl.placeholder = 'e.g. ' + inputVal(230);
+      currentWeightEl.placeholder = 'e.g. ' + inputVal(240);
+      document.querySelectorAll('#netPresets .chip').forEach(function (chip) {
+        chip.textContent = showVal(Number(chip.dataset.value));
+      });
+      renderTable();
+      updateSummary();
+      updateModeLabel();
     }
 
     function applyPreset(index) {
-      var c = CANISTERS[index];
+      activePreset = index;
       presetSelect.value = index;
       document.getElementById('modeTare').checked = true;
-      netWeightEl.value = c.net;
-      secondWeightEl.value = c.empty;
       netWeightGroup.hidden = true;
       secondWeightGroup.hidden = true;
-      presetSummary.textContent = 'Full ' + fmt(c.full) + ' g - empty ' + fmt(c.empty) + ' g - just weigh it and enter the current weight below.';
+      updateSummary();
       updateModeLabel();
     }
 
     function useManualEntry() {
+      activePreset = null;
       presetSelect.value = '';
       netWeightGroup.hidden = false;
       secondWeightGroup.hidden = false;
-      presetSummary.textContent = '';
+      grams.net = null;
+      grams.second = null;
       netWeightEl.value = '';
       secondWeightEl.value = '';
+      updateSummary();
       recalc();
     }
+
+    function bindInput(el, key) {
+      el.addEventListener('input', function () {
+        var v = parseFloat(el.value);
+        grams[key] = isNaN(v) ? null : toGrams(v);
+        recalc();
+      });
+    }
+    bindInput(netWeightEl, 'net');
+    bindInput(secondWeightEl, 'second');
+    bindInput(currentWeightEl, 'current');
+
+    document.querySelectorAll('input[name="mode"]').forEach(function (el) {
+      el.addEventListener('change', updateModeLabel);
+    });
+
+    document.querySelectorAll('input[name="unit"]').forEach(function (el) {
+      el.addEventListener('change', function () {
+        if (el.checked) applyUnit(el.value);
+      });
+    });
+
+    document.getElementById('netPresets').addEventListener('click', function (e) {
+      var btn = e.target.closest('.chip');
+      if (!btn) return;
+      grams.net = Number(btn.dataset.value);
+      netWeightEl.value = inputVal(grams.net);
+      recalc();
+    });
 
     presetSelect.addEventListener('change', function () {
       if (presetSelect.value === '') {
@@ -622,6 +696,7 @@
       }
     });
 
+    applyUnit('g');
     applyPreset(0);
   })();
 </script>
