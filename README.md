@@ -13,5 +13,6 @@ Each language is its own standalone file, with no build step and no dependencies
 | English | `index.html` |
 | Swedish | `sv.html` |
 | German | `de.html` |
+| Norwegian | `no.html` |
 
 Embed the matching file in the matching language version of your Shopify page, for example with an iframe pointing at that file's URL.
