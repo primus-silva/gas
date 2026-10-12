@@ -1,13 +1,17 @@
-# Canister Gauge
+# Canister Calculator
 
-A single-page calculator for figuring out how much fuel is left in a camping gas canister (isobutane/propane or butane).
+A single-page calculator for figuring out how much fuel is left in a camping gas canister.
 
-Weigh the canister on a kitchen scale, enter:
+Pick your canister, weigh it on a kitchen scale (grams, ounces or pounds), enter the current weight, and it shows the remaining fuel as a percentage and as a weight.
 
-- the net gas weight when full (printed on the label),
-- either the empty (tare) weight or the sealed weight when new,
-- the current weight,
+## Languages
 
-and it works out the remaining fuel as a percentage and in grams, with an optional stove-runtime estimate.
+Each language is its own standalone file, with no build step and no dependencies:
 
-Open `index.html` in a browser — no build step, no dependencies.
+| Language | File |
+| --- | --- |
+| English | `index.html` |
+| Swedish | `sv.html` |
+| German | `de.html` |
+
+Embed the matching file in the matching language version of your Shopify page, for example with an iframe pointing at that file's URL.

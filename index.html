@@ -342,40 +342,40 @@
 <div class="page">
   <header class="masthead">
     <div>
-      <h1>Canister Calculator</h1>
-      <p class="tagline">Weigh your gas cartridge on a kitchen scale and enter the numbers to see how much fuel is actually left inside.</p>
+      <h1 data-i18n="title">Canister Calculator</h1>
+      <p class="tagline" data-i18n="tagline">Weigh your gas cartridge on a kitchen scale and enter the numbers to see how much fuel is actually left inside.</p>
     </div>
   </header>
 
   <main class="panel">
     <section class="form-col">
       <div class="field-group">
-        <span class="field-label" id="unitLabel">Weight unit</span>
+        <span class="field-label" id="unitLabel" data-i18n="unitLabel">Weight unit</span>
         <div class="segmented three" role="radiogroup" aria-labelledby="unitLabel">
           <input type="radio" name="unit" id="unitG" value="g" checked>
-          <label for="unitG">Grams</label>
+          <label for="unitG" data-i18n="unitG">Grams</label>
           <input type="radio" name="unit" id="unitOz" value="oz">
-          <label for="unitOz">Ounces</label>
+          <label for="unitOz" data-i18n="unitOz">Ounces</label>
           <input type="radio" name="unit" id="unitLb" value="lb">
-          <label for="unitLb">Pounds</label>
+          <label for="unitLb" data-i18n="unitLb">Pounds</label>
         </div>
       </div>
 
       <div class="field-group">
-        <label class="field-label" for="canisterPreset">Your canister</label>
+        <label class="field-label" for="canisterPreset" data-i18n="canisterLabel">Your canister</label>
         <select id="canisterPreset" class="preset-select">
-          <option value="">Other / enter weights manually</option>
+          <option value="" data-i18n="other">Other / enter weights manually</option>
         </select>
         <p class="field-hint" id="presetSummary"></p>
       </div>
 
       <div class="field-group" id="netWeightGroup" hidden>
-        <label class="field-label" for="netWeight">Net gas weight, when full</label>
+        <label class="field-label" for="netWeight" data-i18n="netLabel">Net gas weight, when full</label>
         <div class="weight-input">
           <input type="number" id="netWeight" inputmode="decimal" min="0" step="1" placeholder="e.g. 230" />
           <span class="unit-suffix">g</span>
         </div>
-        <p class="field-hint">Printed on the canister label - the fuel only, not the metal.</p>
+        <p class="field-hint" data-i18n="netHint">Printed on the canister label - the fuel only, not the metal.</p>
         <div class="chip-row" id="netPresets">
           <button type="button" class="chip" data-value="100">100 g</button>
           <button type="button" class="chip" data-value="227">227 g</button>
@@ -388,24 +388,24 @@
         <label class="field-label" id="secondLabel">Empty weight (tare)</label>
         <div class="segmented" role="radiogroup" aria-labelledby="secondLabel">
           <input type="radio" name="mode" id="modeTare" value="tare" checked>
-          <label for="modeTare">I know the empty weight</label>
+          <label for="modeTare" data-i18n="modeTare">I know the empty weight</label>
           <input type="radio" name="mode" id="modeFull" value="full">
-          <label for="modeFull">I know the sealed weight</label>
+          <label for="modeFull" data-i18n="modeFull">I know the sealed weight</label>
         </div>
         <div class="weight-input">
           <input type="number" id="secondWeight" inputmode="decimal" min="0" step="1" placeholder="e.g. 155" />
           <span class="unit-suffix">g</span>
         </div>
-        <p class="field-hint" id="secondHint">Often stamped near the base or valve of the canister. If you can't find it, weigh a spent one instead.</p>
+        <p class="field-hint" id="secondHint"></p>
       </div>
 
       <div class="field-group">
-        <label class="field-label" for="currentWeight">Current weight, right now</label>
+        <label class="field-label" for="currentWeight" data-i18n="currentLabel">Current weight, right now</label>
         <div class="weight-input">
           <input type="number" id="currentWeight" inputmode="decimal" min="0" step="1" placeholder="e.g. 240" />
           <span class="unit-suffix">g</span>
         </div>
-        <p class="field-hint">Put the canister on the scale as it is today.</p>
+        <p class="field-hint" data-i18n="currentHint">Put the canister on the scale as it is today.</p>
       </div>
 
     </section>
@@ -418,7 +418,7 @@
         </svg>
         <div class="gauge-center">
           <span class="gauge-pct" id="pctDisplay"> - </span>
-          <span class="gauge-sub">remaining</span>
+          <span class="gauge-sub" data-i18n="remaining">remaining</span>
         </div>
       </div>
 
@@ -432,21 +432,65 @@
   </main>
 
   <details class="reference">
-    <summary>Canister reference weights</summary>
+    <summary data-i18n="refSummary">Canister reference weights</summary>
     <div class="overflow-guard">
       <table class="ref-table" id="refTable">
         <thead>
-          <tr><th>Canister</th><th>Fuel content</th><th>Full weight</th><th>Empty weight</th></tr>
+          <tr><th data-i18n="thCanister">Canister</th><th data-i18n="thFuel">Fuel content</th><th data-i18n="thFull">Full weight</th><th data-i18n="thEmpty">Empty weight</th></tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
-    <p class="ref-note">These are the exact figures for each canister - select one above to fill in the calculator automatically, or use them to check a canister by hand.</p>
+    <p class="ref-note" data-i18n="refNote">These are the exact figures for each canister - select one above to fill in the calculator automatically, or use them to check a canister by hand.</p>
   </details>
 </div>
 
 <script>
   (function () {
+    var T = {
+      en: {
+        title: 'Canister Calculator',
+        tagline: 'Weigh your gas cartridge on a kitchen scale and enter the numbers to see how much fuel is actually left inside.',
+        unitLabel: 'Weight unit', unitG: 'Grams', unitOz: 'Ounces', unitLb: 'Pounds',
+        canisterLabel: 'Your canister',
+        other: 'Other / enter weights manually',
+        netLabel: 'Net gas weight, when full',
+        netHint: 'Printed on the canister label - the fuel only, not the metal.',
+        modeTare: 'I know the empty weight',
+        modeFull: 'I know the sealed weight',
+        tareLabel: 'Empty weight (tare)',
+        sealedLabel: 'Sealed weight, brand new',
+        tareHint: "Often stamped near the base or valve of the canister. If you can't find it, weigh a spent one instead.",
+        sealedHint: 'The full weight before first use - box, receipt, or a fresh one on the scale.',
+        currentLabel: 'Current weight, right now',
+        currentHint: 'Put the canister on the scale as it is today.',
+        remaining: 'remaining',
+        enterNumbers: 'Enter your numbers',
+        fillFields: 'Fill in the fields to calculate.',
+        checkNumbers: 'Check your numbers',
+        sealedTooSmall: 'The sealed weight should be larger than the net gas weight.',
+        statusEmpty: 'Empty',
+        statusLow: 'Low - pack a spare',
+        statusRunning: 'Running low',
+        statusFull: 'Full',
+        statusGood: 'Good to go',
+        gasLeft: '{left} of gas left, out of {full} full.',
+        warnBelow: 'The current weight is below the empty weight you entered - double-check your numbers or your scale.',
+        warnAbove: 'The current weight is above the full weight - double-check your numbers.',
+        summary: 'Full {full} - empty {empty} - just weigh it and enter the current weight below.',
+        refSummary: 'Canister reference weights',
+        thCanister: 'Canister', thFuel: 'Fuel content', thFull: 'Full weight', thEmpty: 'Empty weight',
+        refNote: 'These are the exact figures for each canister - select one above to fill in the calculator automatically, or use them to check a canister by hand.',
+        eg: 'e.g.'
+      }
+    };
+
+    var lang = 'en';
+    var decimalComma = lang !== 'en';
+
+    function t(key) { return T[lang][key]; }
+    function loc(s) { return decimalComma ? s.replace('.', ',') : s; }
+
     var UNITS = {
       g:  { label: 'g',  factor: 1,            show: 2, out: 0, step: '1' },
       oz: { label: 'oz', factor: 28.349523125, show: 2, out: 2, step: '0.1' },
@@ -496,6 +540,14 @@
 
     var CIRC = 2 * Math.PI * 82;
 
+    function applyStaticText() {
+      document.documentElement.lang = lang;
+      document.title = t('title');
+      document.querySelectorAll('[data-i18n]').forEach(function (el) {
+        el.textContent = t(el.getAttribute('data-i18n'));
+      });
+    }
+
     function trim(n, d) {
       var s = n.toFixed(d);
       return s.indexOf('.') === -1 ? s : s.replace(/\.?0+$/, '');
@@ -503,8 +555,8 @@
     function toUnit(g) { return g / UNITS[unit].factor; }
     function toGrams(v) { return v * UNITS[unit].factor; }
     function inputVal(g) { return trim(toUnit(g), UNITS[unit].show); }
-    function showVal(g) { return inputVal(g) + ' ' + UNITS[unit].label; }
-    function outVal(g) { return toUnit(g).toFixed(UNITS[unit].out) + ' ' + UNITS[unit].label; }
+    function showVal(g) { return loc(inputVal(g)) + ' ' + UNITS[unit].label; }
+    function outVal(g) { return loc(toUnit(g).toFixed(UNITS[unit].out)) + ' ' + UNITS[unit].label; }
 
     function mode() {
       return document.querySelector('input[name="mode"]:checked').value;
@@ -512,13 +564,13 @@
 
     function updateModeLabel() {
       if (mode() === 'tare') {
-        secondLabelEl.textContent = 'Empty weight (tare)';
-        secondHintEl.textContent = "Often stamped near the base or valve of the canister. If you can't find it, weigh a spent one instead.";
-        secondWeightEl.placeholder = 'e.g. ' + inputVal(155);
+        secondLabelEl.textContent = t('tareLabel');
+        secondHintEl.textContent = t('tareHint');
+        secondWeightEl.placeholder = t('eg') + ' ' + loc(inputVal(155));
       } else {
-        secondLabelEl.textContent = 'Sealed weight, brand new';
-        secondHintEl.textContent = 'The full weight before first use - box, receipt, or a fresh one on the scale.';
-        secondWeightEl.placeholder = 'e.g. ' + inputVal(385);
+        secondLabelEl.textContent = t('sealedLabel');
+        secondHintEl.textContent = t('sealedHint');
+        secondWeightEl.placeholder = t('eg') + ' ' + loc(inputVal(385));
       }
       recalc();
     }
@@ -551,16 +603,16 @@
       if (netG === null || netG <= 0 || grams.current === null) {
         pctDisplay.textContent = ' - ';
         setGauge(0, 'var(--border)');
-        setStatus('Enter your numbers', 'neutral');
-        gramsLine.textContent = 'Fill in the fields to calculate.';
+        setStatus(t('enterNumbers'), 'neutral');
+        gramsLine.textContent = t('fillFields');
         return;
       }
 
       if (tareG < 0) {
-        setStatus('Check your numbers', 'critical');
+        setStatus(t('checkNumbers'), 'critical');
         pctDisplay.textContent = ' - ';
         setGauge(0, 'var(--status-critical)');
-        gramsLine.textContent = 'The sealed weight should be larger than the net gas weight.';
+        gramsLine.textContent = t('sealedTooSmall');
         return;
       }
 
@@ -570,29 +622,31 @@
 
       var color, label, cls;
       if (pct <= 0) {
-        color = 'var(--status-critical)'; label = 'Empty'; cls = 'critical';
+        color = 'var(--status-critical)'; label = t('statusEmpty'); cls = 'critical';
       } else if (pct < 15) {
-        color = 'var(--status-critical)'; label = 'Low - pack a spare'; cls = 'critical';
+        color = 'var(--status-critical)'; label = t('statusLow'); cls = 'critical';
       } else if (pct < 40) {
-        color = 'var(--status-warn)'; label = 'Running low'; cls = 'warn';
+        color = 'var(--status-warn)'; label = t('statusRunning'); cls = 'warn';
       } else if (pct >= 97) {
-        color = 'var(--status-good)'; label = 'Full'; cls = 'good';
+        color = 'var(--status-good)'; label = t('statusFull'); cls = 'good';
       } else {
-        color = 'var(--status-good)'; label = 'Good to go'; cls = 'good';
+        color = 'var(--status-good)'; label = t('statusGood'); cls = 'good';
       }
 
       setGauge(clamped, color);
       pctDisplay.textContent = Math.round(clamped) + '%';
       setStatus(label, cls);
 
-      gramsLine.innerHTML = '<strong>' + outVal(Math.max(0, remaining)) + '</strong> of gas left, out of ' + outVal(netG) + ' full.';
+      gramsLine.innerHTML = t('gasLeft')
+        .replace('{left}', '<strong>' + outVal(Math.max(0, remaining)) + '</strong>')
+        .replace('{full}', outVal(netG));
 
       if (pct < 0) {
         warningNote.hidden = false;
-        warningNote.textContent = 'The current weight is below the empty weight you entered - double-check your numbers or your scale.';
+        warningNote.textContent = t('warnBelow');
       } else if (pct > 100) {
         warningNote.hidden = false;
-        warningNote.textContent = 'The current weight is above the full weight - double-check your numbers.';
+        warningNote.textContent = t('warnAbove');
       }
     }
 
@@ -612,7 +666,7 @@
         return;
       }
       var c = CANISTERS[activePreset];
-      presetSummary.textContent = 'Full ' + showVal(c.full) + ' - empty ' + showVal(c.empty) + ' - just weigh it and enter the current weight below.';
+      presetSummary.textContent = t('summary').replace('{full}', showVal(c.full)).replace('{empty}', showVal(c.empty));
     }
 
     function applyUnit(next) {
@@ -626,8 +680,8 @@
       netWeightEl.value = grams.net === null ? '' : inputVal(grams.net);
       secondWeightEl.value = grams.second === null ? '' : inputVal(grams.second);
       currentWeightEl.value = grams.current === null ? '' : inputVal(grams.current);
-      netWeightEl.placeholder = 'e.g. ' + inputVal(230);
-      currentWeightEl.placeholder = 'e.g. ' + inputVal(240);
+      netWeightEl.placeholder = t('eg') + ' ' + loc(inputVal(230));
+      currentWeightEl.placeholder = t('eg') + ' ' + loc(inputVal(240));
       document.querySelectorAll('#netPresets .chip').forEach(function (chip) {
         chip.textContent = showVal(Number(chip.dataset.value));
       });
@@ -696,6 +750,7 @@
       }
     });
 
+    applyStaticText();
     applyUnit('g');
     applyPreset(0);
   })();
